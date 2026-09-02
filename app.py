@@ -7,142 +7,172 @@ import soundfile as sf
 from kokoro_onnx import Kokoro
 
 # =========================================================
-# CONFIGURACIÓN DE PÁGINA
+# 1. CONFIGURACIÓN DEL CORE (DEBE IR PRIMERO)
 # =========================================================
 st.set_page_config(
-    page_title="SonicReader | Studio Audio Engine",
-    page_icon="🎙️",
+    page_title="SonicReader | AI Voice Studio",
+    page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # =========================================================
-# ESTILOS ENTERPRISE (TIPO NATURALREADER)
+# 2. INYECCIÓN CSS NIVEL ENTERPRISE (FORZANDO LIGHT THEME)
 # =========================================================
 st.markdown("""
 <style>
+    /* Importar fuente premium (Inter) */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+    /* Reset y tipografía global */
     html, body, [class*="css"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        color: #0f172a !important;
     }
 
+    /* Ocultar basura de Streamlit */
     #MainMenu, footer, header { visibility: hidden !important; }
-    .block-container {
-        padding-top: 1.5rem !important;
-        padding-bottom: 3rem !important;
-        max-width: 1200px !important;
-    }
-
+    
+    /* Forzar fondo claro en toda la app */
     .stApp {
-        background-color: #f7f9fb;
+        background-color: #f8fafc !important; 
     }
 
+    /* Ajustar el contenedor principal */
+    .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 5rem !important;
+        max-width: 1000px !important;
+    }
+
+    /* =======================================
+       SIDEBAR (Menú lateral limpio)
+       ======================================= */
     section[data-testid="stSidebar"] {
-        background-color: #ffffff;
-        border-right: 1px solid #eef0f3;
+        background-color: #ffffff !important;
+        border-right: 1px solid #e2e8f0 !important;
+    }
+    /* Estilo de los botones del Sidebar (como enlaces de menú) */
+    section[data-testid="stSidebar"] .stButton > button {
+        background: transparent !important;
+        border: none !important;
+        color: #475569 !important;
+        justify-content: flex-start !important;
+        padding: 10px 16px !important;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        transition: all 0.2s ease !important;
+    }
+    section[data-testid="stSidebar"] .stButton > button:hover {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
     }
 
-    .editor-canvas {
+    /* =======================================
+       BARRA DE CONTROLES SUPERIOR
+       ======================================= */
+    .control-bar-container {
         background: #ffffff;
+        border: 1px solid #e2e8f0;
         border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
-        border: 1px solid #e9ecef;
-        padding: 30px;
-        margin-top: 10px;
+        padding: 12px 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        margin-bottom: 24px;
     }
-
-    .stButton > button[kind="primary"], .stButton > button[data-testid="baseButton-primary"] {
-        background: #0066ff !important;
+    
+    /* Selectores y Sliders limpios */
+    div[data-testid="stSelectbox"] > div > div {
+        background-color: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        color: #0f172a !important;
+    }
+    
+    /* BOTÓN PLAY (El Hero Button) */
+    div[data-testid="column"]:nth-child(4) .stButton > button {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
         border: none !important;
         color: #ffffff !important;
-        border-radius: 9999px !important;
-        height: 52px !important;
-        width: 52px !important;
+        border-radius: 50% !important;
+        height: 56px !important;
+        width: 56px !important;
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        font-size: 22px !important;
-        box-shadow: 0 4px 14px rgba(0, 102, 255, 0.35) !important;
-        transition: all 0.15s ease-in-out !important;
-        margin: auto;
+        font-size: 24px !important;
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3) !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+        margin-top: 15px; /* Alineación visual */
     }
-    .stButton > button[kind="primary"]:hover, .stButton > button[data-testid="baseButton-primary"]:hover {
-        transform: scale(1.05);
-        background: #0052cc !important;
-        box-shadow: 0 6px 20px rgba(0, 102, 255, 0.45) !important;
-    }
-
-    .stButton > button[kind="secondary"], .stButton > button[data-testid="baseButton-secondary"] {
-        background: #ffffff !important;
-        color: #495057 !important;
-        border: 1px solid #e3e6eb !important;
-        border-radius: 9999px !important;
-        padding: 6px 16px !important;
-        font-size: 0.85rem !important;
-        font-weight: 500 !important;
-        transition: all 0.2s ease !important;
-    }
-    .stButton > button[kind="secondary"]:hover, .stButton > button[data-testid="baseButton-secondary"]:hover {
-        background: #f1f3f5 !important;
-        border-color: #ced4da !important;
-        color: #212529 !important;
+    div[data-testid="column"]:nth-child(4) .stButton > button:hover {
+        transform: scale(1.05) !important;
+        box-shadow: 0 10px 25px -3px rgba(37, 99, 235, 0.5) !important;
     }
 
-    .stTextArea textarea {
-        border: none !important;
-        background-color: transparent !important;
-        font-size: 1.12rem !important;
+    /* =======================================
+       EDITOR DE TEXTO (El Lienzo Principal)
+       ======================================= */
+    div[data-testid="stTextArea"] textarea {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 16px !important;
+        padding: 24px !important;
+        font-size: 1.15rem !important;
         line-height: 1.7 !important;
-        color: #2b2f38 !important;
-        box-shadow: none !important;
-        resize: vertical !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02) !important;
+        height: 350px !important;
+        resize: none !important;
     }
-    .stTextArea textarea:focus {
+    div[data-testid="stTextArea"] textarea:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
         outline: none !important;
-        box-shadow: none !important;
     }
 
-    .bottom-status-bar {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: #2b303a;
-        color: #e9ecef;
-        padding: 10px 24px;
-        font-size: 0.82rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        z-index: 1000;
+    /* =======================================
+       CHIPS (Botones inferiores de sugerencias)
+       ======================================= */
+    .chip-container .stButton > button {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #64748b !important;
+        border-radius: 999px !important;
+        font-size: 0.85rem !important;
+        padding: 6px 16px !important;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    }
+    .chip-container .stButton > button:hover {
+        background: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================================================
-# MODELOS Y CACHÉ ULTRA RÁPIDO
+# 3. MOTOR TTS: DESCARGA Y CACHÉ EXTREMO (0.00s Latencia repetida)
 # =========================================================
 MODEL_FILE = "kokoro-v1.0.int8.onnx"
 VOICES_FILE = "voices-v1.0.bin"
 MODEL_URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.int8.onnx"
 VOICES_URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin"
 
-def download_if_missing(file_path: str, url: str):
-    if not os.path.exists(file_path):
-        urllib.request.urlretrieve(url, file_path)
-
-@st.cache_resource(show_spinner=False)
-def get_tts_pipeline():
-    download_if_missing(MODEL_FILE, MODEL_URL)
-    download_if_missing(VOICES_FILE, VOICES_URL)
+@st.cache_resource(show_spinner="Iniciando motor neural por primera vez...")
+def get_engine():
+    if not os.path.exists(MODEL_FILE):
+        urllib.request.urlretrieve(MODEL_URL, MODEL_FILE)
+    if not os.path.exists(VOICES_FILE):
+        urllib.request.urlretrieve(VOICES_URL, VOICES_FILE)
     return Kokoro(MODEL_FILE, VOICES_FILE)
 
-pipeline = get_tts_pipeline()
+pipeline = get_engine()
 
-@st.cache_data(show_spinner=False, max_entries=100)
-def synthesize_audio_fast(_pipeline, text: str, voice: str, speed: float) -> bytes:
+@st.cache_data(show_spinner=False, max_entries=50)
+def synthesize(_pipeline, text: str, voice: str, speed: float) -> bytes:
     clean_text = " ".join(text.split())
     samples, _ = _pipeline.create(clean_text, voice=voice, speed=speed, lang="en-us")
     buffer = io.BytesIO()
@@ -150,180 +180,133 @@ def synthesize_audio_fast(_pipeline, text: str, voice: str, speed: float) -> byt
     return buffer.getvalue()
 
 # =========================================================
-# CATÁLOGO DE VOCES CON AVATARES
+# 4. VOCES PREMIUM
 # =========================================================
 VOICES = {
-    "am_adam": {
-        "name": "Adam",
-        "desc": "American • Professional",
-        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces"
-    },
-    "af_heart": {
-        "name": "Heart",
-        "desc": "American • Expressive Narrative",
-        "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=faces"
-    },
-    "af_bella": {
-        "name": "Bella",
-        "desc": "American • Educational",
-        "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces"
-    },
-    "am_michael": {
-        "name": "Michael",
-        "desc": "American • Conversational",
-        "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces"
-    },
-    "bf_emma": {
-        "name": "Emma",
-        "desc": "British • Neutral Formal",
-        "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=faces"
-    },
-    "bm_george": {
-        "name": "George",
-        "desc": "British • Deep Narration",
-        "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces"
-    }
+    "af_heart":   {"name": "Heart", "tag": "American Narrative"},
+    "am_adam":    {"name": "Adam", "tag": "American Professional"},
+    "af_bella":   {"name": "Bella", "tag": "American Clear"},
+    "am_michael": {"name": "Michael", "tag": "American Dynamic"},
+    "bf_emma":    {"name": "Emma", "tag": "British Formal"},
+    "bm_george":  {"name": "George", "tag": "British Deep"}
 }
 
 # =========================================================
-# BARRA LATERAL
+# 5. CONSTRUCCIÓN DE LA UI (SIDEBAR)
 # =========================================================
 with st.sidebar:
     st.markdown("""
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px;">
-            <div style="background:#0066ff; color:white; border-radius:8px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-weight:700;">N</div>
-            <span style="font-size:1.15rem; font-weight:700; color:#1e293b;">SonicReader</span>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:30px; padding: 10px 0;">
+            <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); color:white; border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size: 18px; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2);">S</div>
+            <span style="font-size:1.25rem; font-weight:700; color:#0f172a; letter-spacing: -0.5px;">SonicReader</span>
         </div>
     """, unsafe_allow_html=True)
 
-    st.caption("DOCUMENT")
-    st.button("📝 Add Text", use_container_width=True, type="secondary")
-    st.button("📁 Upload Document", use_container_width=True, type="secondary")
-    st.button("📚 Library", use_container_width=True, type="secondary")
+    st.markdown("<p style='font-size: 0.75rem; font-weight: 600; color: #94a3b8; margin-bottom: 8px; letter-spacing: 1px;'>WORKSPACE</p>", unsafe_allow_html=True)
+    st.button("📝 Editor", use_container_width=True)
+    st.button("📁 Documents", use_container_width=True)
+    st.button("🎧 Audio Library", use_container_width=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.caption("FEATURES")
-    st.button("🎙️ Voice Cloning", use_container_width=True, type="secondary")
-    st.button("🎧 AI Audio Studio", use_container_width=True, type="secondary")
+    st.markdown("<br><p style='font-size: 0.75rem; font-weight: 600; color: #94a3b8; margin-bottom: 8px; letter-spacing: 1px;'>PRO FEATURES</p>", unsafe_allow_html=True)
+    st.button("🎙️ Voice Cloning", use_container_width=True)
+    st.button("🌐 Translation", use_container_width=True)
 
-    st.markdown("<br><hr style='border:none; border-top:1px solid #f1f3f5;'><br>", unsafe_allow_html=True)
-    st.caption("SYSTEM SPECS")
-    st.markdown("""
-        <div style="font-size:0.8rem; color:#64748b; line-height:1.6;">
-            • Engine: <b>Kokoro 82M INT8</b><br>
-            • Latency: <b>Realtime ONNX</b><br>
-            • Quality: <b>24 kHz Hi-Fi</b>
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div style='position:absolute; bottom:20px; width:100%;'><hr style='border-color:#e2e8f0;'><p style='font-size: 0.75rem; color: #64748b;'>Engine: Kokoro-82M ONNX<br>Status: <span style='color:#10b981;'>● Online</span></p></div>", unsafe_allow_html=True)
 
 # =========================================================
-# GESTIÓN DE TEXTO DE ENTRADA
+# 6. ESTADO DEL TEXTO
 # =========================================================
 if "input_text" not in st.session_state:
-    st.session_state.input_text = "Natural voice synthesis converts complex text into lifelike speech with real-time speed."
+    st.session_state.input_text = "Speech synthesis has evolved. Our neural engine transforms text into incredibly lifelike audio in real-time, completely reshaping how we consume written content."
 
 # =========================================================
-# BARRA SUPERIOR DE CONTROLES
+# 7. MAIN APP: BARRA SUPERIOR DE CONTROLES
 # =========================================================
-c_avatar, c_voice, c_speed, c_play, c_download = st.columns([0.8, 2.2, 1.5, 1, 1.5], vertical_alignment="center")
+st.markdown('<div class="control-bar-container">', unsafe_allow_html=True)
+c_voice, c_speed, c_space, c_play, c_download = st.columns([2, 1.5, 0.5, 1, 1], vertical_alignment="center")
 
 with c_voice:
-    selected_voice_key = st.selectbox(
-        "Voice",
+    selected_voice = st.selectbox(
+        "Speaker Profile",
         options=list(VOICES.keys()),
-        format_func=lambda k: f"{VOICES[k]['name']} ({VOICES[k]['desc'].split('•')[0].strip()})",
-        label_visibility="collapsed"
+        format_func=lambda k: f"👤 {VOICES[k]['name']} ({VOICES[k]['tag']})"
     )
-
-with c_avatar:
-    avatar_url = VOICES[selected_voice_key]["avatar"]
-    st.markdown(f"""
-        <div style="display:flex; justify-content:center; align-items:center;">
-            <img src="{avatar_url}" style="width:46px; height:46px; border-radius:50%; object-fit:cover; border:2px solid #0066ff; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-        </div>
-    """, unsafe_allow_html=True)
 
 with c_speed:
     speed = st.select_slider(
-        "Speed",
-        options=[0.75, 1.0, 1.25, 1.5, 2.0],
+        "Pacing (Speed)",
+        options=[0.75, 0.9, 1.0, 1.1, 1.25, 1.5],
         value=1.0,
-        format_func=lambda x: f"{x}x",
-        label_visibility="collapsed"
+        format_func=lambda x: f"{x}x"
     )
 
 with c_play:
-    play_pressed = st.button("▶", type="primary", help="Synthesize & Play")
+    # Este botón está estilizado por CSS como el Play azul gigante
+    play_pressed = st.button("▶")
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # =========================================================
-# LIENZO / CARD DE EDICIÓN
+# 8. MAIN APP: EDITOR DE TEXTO (LIENZO)
 # =========================================================
-st.markdown('<div class="editor-canvas">', unsafe_allow_html=True)
-
 text = st.text_area(
-    "Content Editor",
+    "Editor",
     value=st.session_state.input_text,
-    placeholder="Type, paste or edit text here...",
-    height=280,
+    placeholder="Start typing or paste your document here...",
     label_visibility="collapsed"
 )
 
-# Chips de sugerencias
-st.markdown("<div style='margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;'>", unsafe_allow_html=True)
-p1, p2, p3, p4 = st.columns(4)
-
-with p1:
-    if st.button("📖 Read a short story", use_container_width=True, type="secondary"):
-        st.session_state.input_text = "The old lighthouse stood firmly against the crashing waves, guiding ships safely through the storm."
+# =========================================================
+# 9. MAIN APP: CHIPS DE TEMPLATES
+# =========================================================
+st.markdown('<div class="chip-container">', unsafe_allow_html=True)
+ch1, ch2, ch3, ch4 = st.columns(4)
+with ch1:
+    if st.button("📖 Storytelling"): 
+        st.session_state.input_text = "The old clock tower chimed midnight. Rain lashed against the cobblestones as a lone figure emerged from the fog, pulling their coat tight against the bitter wind."
         st.rerun()
-with p2:
-    if st.button("🎙️ Listen to a Podcast", use_container_width=True, type="secondary"):
-        st.session_state.input_text = "Welcome back to the Tech Frontiers podcast. Today we are diving into quantized on-device neural models."
+with ch2:
+    if st.button("🎙️ Podcast Intro"): 
+        st.session_state.input_text = "Welcome back to Tech Frontiers! In today's episode, we're diving deep into the world of quantized neural networks and how they're bringing AI directly to your devices."
         st.rerun()
-with p3:
-    if st.button("🌐 Global Accents", use_container_width=True, type="secondary"):
-        st.session_state.input_text = "Good afternoon! Kokoro supports both American and British standard accents natively."
+with ch3:
+    if st.button("💼 Corporate"): 
+        st.session_state.input_text = "Our Q3 earnings report indicates a twenty-five percent increase in year-over-year revenue, driven primarily by our new enterprise software solutions."
         st.rerun()
-with p4:
-    if st.button("⚡ Speed Benchmark", use_container_width=True, type="secondary"):
-        st.session_state.input_text = "Ultra-fast INT8 ONNX models execute speech synthesis at sub-second latencies on standard modern CPUs."
+with ch4:
+    if st.button("⚡ Fast Benchmark"): 
+        st.session_state.input_text = "This is a speed test to demonstrate sub-second audio generation capabilities using INT8 precision models."
         st.rerun()
-
-st.markdown("</div></div>", unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # =========================================================
-# LÓGICA DE PROCESAMIENTO Y REPRODUCCIÓN
+# 10. LÓGICA DE GENERACIÓN Y REPRODUCTOR
 # =========================================================
 if play_pressed:
     clean_text = text.strip()
     if not clean_text:
-        st.toast("⚠️ Please enter some text before generating audio.")
+        st.toast("⚠️ Please enter text to synthesize.", icon="✍️")
     else:
         t0 = time.perf_counter()
-        with st.spinner(""):
-            audio_bytes = synthesize_audio_fast(pipeline, clean_text, selected_voice_key, speed)
-            elapsed = time.perf_counter() - t0
-
+        
+        # Generación ultrarrápida (con caché)
+        with st.spinner("Synthesizing..."):
+            audio_bytes = synthesize(pipeline, clean_text, selected_voice, speed)
+        
+        elapsed = time.perf_counter() - t0
+        
+        # Notificación elegante
+        st.toast(f"Audio generated in {elapsed:.2f} seconds", icon="⚡")
+        
+        # Reproductor nativo limpio y botón de descarga
         st.markdown("<br>", unsafe_allow_html=True)
         st.audio(audio_bytes, format="audio/wav", autoplay=True)
-
+        
         with c_download:
             st.download_button(
-                label="⬇ WAV",
+                label="⬇️ Export WAV",
                 data=audio_bytes,
-                file_name=f"speech_{selected_voice_key}.wav",
+                file_name=f"sonicreader_{selected_voice}.wav",
                 mime="audio/wav",
                 use_container_width=True
             )
-
-        st.toast(f"Generated in {elapsed:.2f}s", icon="⚡")
-
-# =========================================================
-# BANNER INFERIOR DE ESTADO
-# =========================================================
-st.markdown("""
-<div class="bottom-status-bar">
-    <span><b>SonicReader Engine</b>: INT8 ONNX Quantized Speech Synthesis</span>
-    <span style="color:#94a3b8;">Status: <b>Active & Ready</b></span>
-</div>
-""", unsafe_allow_html=True)
