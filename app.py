@@ -34,18 +34,15 @@ st.markdown("""
         max-width: 1200px !important;
     }
 
-    /* Fondo de la app */
     .stApp {
         background-color: #f7f9fb;
     }
 
-    /* Sidebar refinada */
     section[data-testid="stSidebar"] {
         background-color: #ffffff;
         border-right: 1px solid #eef0f3;
     }
 
-    /* Tarjeta tipo Lienzo / Documento */
     .editor-canvas {
         background: #ffffff;
         border-radius: 16px;
@@ -55,22 +52,7 @@ st.markdown("""
         margin-top: 10px;
     }
 
-    /* Barra Superior de Control */
-    .control-bar {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 18px;
-        padding: 8px 24px;
-        background: #ffffff;
-        border-radius: 9999px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        border: 1px solid #eef0f3;
-        margin-bottom: 20px;
-    }
-
-    /* Botón Play Azul Circular */
-    .stButton > button[kind="primary"] {
+    .stButton > button[kind="primary"], .stButton > button[data-testid="baseButton-primary"] {
         background: #0066ff !important;
         border: none !important;
         color: #ffffff !important;
@@ -86,14 +68,13 @@ st.markdown("""
         transition: all 0.15s ease-in-out !important;
         margin: auto;
     }
-    .stButton > button[kind="primary"]:hover {
+    .stButton > button[kind="primary"]:hover, .stButton > button[data-testid="baseButton-primary"]:hover {
         transform: scale(1.05);
         background: #0052cc !important;
         box-shadow: 0 6px 20px rgba(0, 102, 255, 0.45) !important;
     }
 
-    /* Botones de Chips / Sugerencias */
-    .stButton > button[kind="secondary"] {
+    .stButton > button[kind="secondary"], .stButton > button[data-testid="baseButton-secondary"] {
         background: #ffffff !important;
         color: #495057 !important;
         border: 1px solid #e3e6eb !important;
@@ -103,13 +84,12 @@ st.markdown("""
         font-weight: 500 !important;
         transition: all 0.2s ease !important;
     }
-    .stButton > button[kind="secondary"]:hover {
+    .stButton > button[kind="secondary"]:hover, .stButton > button[data-testid="baseButton-secondary"]:hover {
         background: #f1f3f5 !important;
         border-color: #ced4da !important;
         color: #212529 !important;
     }
 
-    /* Editor de texto sin bordes agresivos */
     .stTextArea textarea {
         border: none !important;
         background-color: transparent !important;
@@ -124,7 +104,6 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* Banner inferior */
     .bottom-status-bar {
         position: fixed;
         bottom: 0;
@@ -162,12 +141,10 @@ def get_tts_pipeline():
 
 pipeline = get_tts_pipeline()
 
-# Caché de inferencia para velocidad instantánea en textos repetidos
 @st.cache_data(show_spinner=False, max_entries=100)
 def synthesize_audio_fast(_pipeline, text: str, voice: str, speed: float) -> bytes:
     clean_text = " ".join(text.split())
     samples, _ = _pipeline.create(clean_text, voice=voice, speed=speed, lang="en-us")
-    
     buffer = io.BytesIO()
     sf.write(buffer, samples, 24000, format="WAV")
     return buffer.getvalue()
@@ -209,7 +186,7 @@ VOICES = {
 }
 
 # =========================================================
-# BARRA LATERAL (ESTILO NATURALREADER)
+# BARRA LATERAL
 # =========================================================
 with st.sidebar:
     st.markdown("""
@@ -220,14 +197,14 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.caption("DOCUMENT")
-    st.button("📝 Add Text", use_container_width=True, kind="secondary")
-    st.button("📁 Upload Document", use_container_width=True, kind="secondary")
-    st.button("📚 Library", use_container_width=True, kind="secondary")
+    st.button("📝 Add Text", use_container_width=True, type="secondary")
+    st.button("📁 Upload Document", use_container_width=True, type="secondary")
+    st.button("📚 Library", use_container_width=True, type="secondary")
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.caption("FEATURES")
-    st.button("🎙️ Voice Cloning", use_container_width=True, kind="secondary")
-    st.button("🎧 AI Audio Studio", use_container_width=True, kind="secondary")
+    st.button("🎙️ Voice Cloning", use_container_width=True, type="secondary")
+    st.button("🎧 AI Audio Studio", use_container_width=True, type="secondary")
 
     st.markdown("<br><hr style='border:none; border-top:1px solid #f1f3f5;'><br>", unsafe_allow_html=True)
     st.caption("SYSTEM SPECS")
@@ -246,7 +223,7 @@ if "input_text" not in st.session_state:
     st.session_state.input_text = "Natural voice synthesis converts complex text into lifelike speech with real-time speed."
 
 # =========================================================
-# BARRA SUPERIOR DE CONTROLES (FLOATING PLAYER BAR)
+# BARRA SUPERIOR DE CONTROLES
 # =========================================================
 c_avatar, c_voice, c_speed, c_play, c_download = st.columns([0.8, 2.2, 1.5, 1, 1.5], vertical_alignment="center")
 
@@ -276,7 +253,6 @@ with c_speed:
     )
 
 with c_play:
-    # Botón play circular azul
     play_pressed = st.button("▶", type="primary", help="Synthesize & Play")
 
 # =========================================================
@@ -292,24 +268,24 @@ text = st.text_area(
     label_visibility="collapsed"
 )
 
-# Sugerencias / Chips inferiores como la referencia
+# Chips de sugerencias
 st.markdown("<div style='margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;'>", unsafe_allow_html=True)
 p1, p2, p3, p4 = st.columns(4)
 
 with p1:
-    if st.button("📖 Read a short story", use_container_width=True, kind="secondary"):
+    if st.button("📖 Read a short story", use_container_width=True, type="secondary"):
         st.session_state.input_text = "The old lighthouse stood firmly against the crashing waves, guiding ships safely through the storm."
         st.rerun()
 with p2:
-    if st.button("🎙️ Listen to a Podcast", use_container_width=True, kind="secondary"):
+    if st.button("🎙️ Listen to a Podcast", use_container_width=True, type="secondary"):
         st.session_state.input_text = "Welcome back to the Tech Frontiers podcast. Today we are diving into quantized on-device neural models."
         st.rerun()
 with p3:
-    if st.button("🌐 Global Accents", use_container_width=True, kind="secondary"):
+    if st.button("🌐 Global Accents", use_container_width=True, type="secondary"):
         st.session_state.input_text = "Good afternoon! Kokoro supports both American and British standard accents natively."
         st.rerun()
 with p4:
-    if st.button("⚡ Speed Benchmark", use_container_width=True, kind="secondary"):
+    if st.button("⚡ Speed Benchmark", use_container_width=True, type="secondary"):
         st.session_state.input_text = "Ultra-fast INT8 ONNX models execute speech synthesis at sub-second latencies on standard modern CPUs."
         st.rerun()
 
